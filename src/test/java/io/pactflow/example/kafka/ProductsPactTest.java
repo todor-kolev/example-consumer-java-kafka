@@ -58,7 +58,7 @@ public class ProductsPactTest {
     metadata.put("Content-Type", "application/json");
     metadata.put("kafka_topic", "products");
 
-    return builder.expectsToReceive("a product created event with optional fie;d").withMetadata(metadata).withContent(body).toPact();
+    return builder.expectsToReceive("a product created event with optional field").withMetadata(metadata).withContent(body).toPact();
   }
 
   @Test
