@@ -44,9 +44,38 @@ public class ProductsPactTest {
     return builder.expectsToReceive("a product created event").withMetadata(metadata).withContent(body).toPact();
   }
 
+  @Pact(consumer = "pactflow-example-consumer-java-kafka")
+  MessagePact createPactWithOptionalField(MessagePactBuilder builder) {
+    PactDslJsonBody body = new PactDslJsonBody();
+    body.stringType("name", "product name");
+    body.stringType("type", "product series");
+    body.stringType("id", "5cc989d0-d800-434c-b4bb-b1268499e850");
+    body.stringMatcher("version", "v[a-zA-z0-9]+", "v1");
+    body.stringMatcher("event", "^(CREATED|UPDATED|DELETED)$", "CREATED");
+    body.stringType("optParam", "optParam value");
+
+    Map<String, Object> metadata = new HashMap<>();
+    metadata.put("Content-Type", "application/json");
+    metadata.put("kafka_topic", "products");
+
+    return builder.expectsToReceive("a product created event with optional field").withMetadata(metadata).withContent(body).toPact();
+  }
+
   @Test
   @PactTestFor(pactMethod = "createPact")
   void createPactTest(List<Message> messages) throws Exception {
+    ObjectMapper mapper = new ObjectMapper();
+    System.out.println("Message received -> " + messages.get(0).contentsAsString());
+    Product product = mapper.readValue(messages.get(0).contentsAsString(), Product.class);
+
+    assertDoesNotThrow(() -> {
+      listener.listen(product);
+    });
+  }
+
+  @Test
+  @PactTestFor(pactMethod = "createPactWithOptionalField")
+  void createPactWithOptionalFieldTest(List<Message> messages) throws Exception {
     ObjectMapper mapper = new ObjectMapper();
     System.out.println("Message received -> " + messages.get(0).contentsAsString());
     Product product = mapper.readValue(messages.get(0).contentsAsString(), Product.class);
